@@ -83,7 +83,7 @@ if __name__ == '__main__' :
         process_fun = imgproc.process_mnist    
             
     #resnet_50
-    #model = resnet.ResNet([3,4,6,3],[64,128,256,512], configuration.get_number_of_classes(), use_bottleneck = True)
+    model = resnet.ResNet([3,4,6,3],[64,128,256,512], configuration.get_number_of_classes(), use_bottleneck = False)
     #build the model indicating the input shape    
     input_image = tf.keras.Input((input_shape[0], input_shape[1], input_shape[2]), name = 'input_image')     
     model(input_image)    
@@ -91,9 +91,9 @@ if __name__ == '__main__' :
     #use_checkpoints to load weights
     if configuration.use_checkpoint() :                
         model.load_weights(configuration.get_checkpoint_file(), by_name = True, skip_mismatch = True)        
-    #opt = tf.keras.optimizers.Adam() #learning_rate = configuration.get_learning_rate())
+    opt = tf.keras.optimizers.Adam() #learning_rate = configuration.get_learning_rate())
     initial_learning_rate = configuration.get_learning_rate()    
-    opt = tf.keras.optimizers.SGD(learning_rate = initial_learning_rate, momentum = 0.9, nesterov = True)
+    #opt = tf.keras.optimizers.SGD(learning_rate = initial_learning_rate, momentum = 0.9, nesterov = True)
     model.compile(optimizer=opt,
                   loss= losses.crossentropy_loss,
                   metrics=[metrics.simple_accuracy])
@@ -104,6 +104,7 @@ if __name__ == '__main__' :
                         validation_data=val_dataset,
                         validation_steps = configuration.get_validation_steps(),
                         callbacks=[model_checkpoint_callback])
+        np.save(os.path.join(configuration.get_snapshot_dir(),"my_history.npy"), history.history)
                 
     elif pargs.mode == 'test' :
         model.evaluate(val_dataset,
